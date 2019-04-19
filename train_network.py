@@ -132,9 +132,9 @@ def main():
 
         saver = tf.train.Saver()
         if (iteration % 100 == 0):
-            saver.save(network, opts.save_path + '/fast_style_network.ckpt')
+            saver.save(network, options.save_path + '/fast_style_network.ckpt')
 
-        saver.save(network, opts.save_path + '/fast_style_network.ckpt')
+        saver.save(network, options.save_path + '/fast_style_network.ckpt')
 
 
 def print_losses(losses):

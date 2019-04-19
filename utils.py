@@ -1,6 +1,6 @@
 # Copyright (c) 2016-2017 Shafeen Tejani. Released under GPLv3.
 import os
-
+from PIL import Image
 import numpy as np
 import scipy
 import scipy.misc
@@ -20,7 +20,13 @@ def load_image(image_path, img_size=None):
 
 
 def save_image(img, path):
-    scipy.misc.imsave(path, np.clip(img, 0, 255).astype(np.uint8))
+    image = np.clip(img, 0, 255).astype(np.uint8)
+    # scipy.misc.imsave(path, image)
+    # scipy.misc.imsave(path, np.clip(img, 0, 255).astype(np.uint8))
+    # imageio.imwrite(path, np.clip(img, 0, 255).astype(np.uint8))
+    pil_im = Image.fromarray(image)
+    pil_im.show()
+
 
 def get_files(img_dir):
     files = list_files(img_dir)
