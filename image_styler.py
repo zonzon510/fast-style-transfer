@@ -37,23 +37,31 @@ class ImageStyler():
     def img_transform(self, image):
 
         reshaped_image = reshape_image(image)
-        output = self.sess.run(self.net_output, feed_dict={self.img_placeholder: reshaped_image})
+        output = self.sess.run(self.net_output, feed_dict={self.img_placeholder: reshaped_image["resc_im"]})
+        scaled_to_original_image = scale_to_original(output, reshaped_image)
+
+        plt.figure()
+        plt.imshow(output[0].astype(np.uint8))
+        plt.figure()
+        plt.imshow(scaled_to_original_image)
+        plt.show()
+
+        exit(0)
+
+
         im = Image.fromarray(output[0].astype(np.uint8))
         im.show()
         return output[0]
 
 
 def reshape_image(image):
-
     # interpolate the image to a 256 x 256 grid
     # keep aspect ratio
-    plt.imshow(image)
-    print(image.shape)
     height, width, _ = image.shape
-    print("height: ", height)
-    print("width: ", width)
     # scale the image to match the larger dimmension
+    transform_info = dict()
     if height > width:
+        transform_type = "pad_x"
         # scale the height to 256
         sc_factor = 256/height
         width_new = int(width * sc_factor)
@@ -62,50 +70,72 @@ def reshape_image(image):
         if not width_new % 2 == 0:
             width_new += 1  # make it even
 
+        # rescale
         resc_im = scipy.misc.imresize(image, (256, width_new))
         pad = int((256 - width_new) / 2)  # even number to pad on both sides
+        # pad left and right
+        resc_im_padded = np.append(resc_im, np.zeros((256, pad, 3), dtype=np.uint8), axis=1)
+        resc_im_padded = np.append(np.zeros((256, pad, 3), dtype=np.uint8), resc_im_padded, axis=1)
+
+        transform_info["resc_im"] = resc_im_padded[np.newaxis, :, :, :]
+        transform_info["transform_type"] = transform_type
+        transform_info["pad"] = pad
+        transform_info["original_shape"] = image.shape
+        return transform_info
+
+    elif width > height:
+        transform_type = "pad_y"
+        # scale the width to 256
+        sc_factor = 256/width
+        height_new = int(height * sc_factor)
+
+        # if the required padding is odd
+        if not height_new % 2 == 0:
+            height_new += 1  # make it even
+
+        # rescale
+        resc_im = scipy.misc.imresize(image, (height_new, 256))
+        pad = int((256 - height_new) / 2) # even number to pad on top and bottom
+        # pad top and bottom
+        resc_im_padded = np.append(resc_im, np.zeros((pad, 256, 3), dtype=np.uint8), axis=0)
+        resc_im_padded = np.append(np.zeros((pad, 256, 3), dtype=np.uint8), resc_im_padded, axis=0)
+
+        transform_info["resc_im"] = resc_im_padded[np.newaxis, :, :, :]
+        transform_info["transform_type"] = transform_type
+        transform_info["pad"] = pad
+        transform_info["original_shape"] = image.shape
+        return transform_info
+
+    else:
+        # height == width
+        transform_type = "scale"
+        resc_im = scipy.misc.imresize(image, (256, 256))
+        pad = 0
+        transform_info["resc_im"] = resc_im[np.newaxis, :, :, :]
+        transform_info["transform_type"] = transform_type
+        transform_info["pad"] = pad
+        transform_info["original_shape"] = image.shape
+        return transform_info
 
 
-        print("type(resc_im[0,0,0]): ", type(resc_im[0,0,0]))
-        # print(np.array([0]).astype(np.uint8))
-        resc_im_padded = np.append(resc_im, np.zeros((256, pad, 3)).astype(np.uint8), axis=1)
-        resc_im_padded = np.append(np.zeros((256, pad, 3)).astype(np.uint8), resc_im_padded, axis=1)
+def scale_to_original(styled_im, image_info):
 
-        print("type(resc_im_padded[0,0,0]): ", type(resc_im_padded[0,0,0]))
-        # exit(0)
+    if image_info["transform_type"] == "pad_x":
+        # remove padding from x
+        image_cropped = styled_im[:,:,image_info["pad"]:-image_info["pad"],:]
+        image_resized = scipy.misc.imresize(image_cropped[0], image_info["original_shape"])
+        return image_resized
 
-        print("np.shape(resc_im_padded): ", np.shape(resc_im_padded))
-        plt.figure(4)
-        plt.imshow(resc_im_padded)
-        plt.show()
-        exit(0)
+    elif image_info["transform_type"] == "pad_y":
+        # remove padding from y
+        image_cropped = styled_im[:,image_info["pad"]:-image_info["pad"],:,:]
+        image_resized = scipy.misc.imresize(image_cropped[0], image_info["original_shape"])
+        return image_resized
 
-
-
-
-
-        plt.figure(2)
-        plt.imshow(resc_im)
-
-
-
-
-
-    plt.show()
-    exit(0)
-
-
-
-
-    # make sure the image is divisible by 4
-    # reshaped_content_height = (image.shape[0] - image.shape[0] % 4)
-    # reshaped_content_width = (image.shape[1] - image.shape[1] % 4)
-    # reshaped_content_image = image[:reshaped_content_height, :reshaped_content_width, :]
-
-    # add an axis
-    reshaped_content_image = reshaped_content_image[np.newaxis, :, :, :]
-
-    return reshaped_content_image
+    else:
+        # image is square
+        image_resized = scipy.misc.imresize(styled_im[0], image_info["original_shape"])
+        return image_resized
 
 
 if __name__ == "__main__":
