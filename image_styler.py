@@ -41,9 +41,11 @@ class ImageStyler():
         scaled_to_original_image = scale_to_original(output, reshaped_image)
 
         plt.figure()
-        plt.imshow(output[0].astype(np.uint8))
+        plt.imshow(reshaped_image["resc_im"][0].astype(np.uint8))
         plt.figure()
-        plt.imshow(scaled_to_original_image)
+        plt.imshow(output[0].astype(np.uint8))
+        # plt.figure()
+        # plt.imshow(scaled_to_original_image)
 
 
         # im = Image.fromarray(output[0].astype(np.uint8))
