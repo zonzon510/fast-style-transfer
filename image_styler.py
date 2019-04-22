@@ -44,13 +44,10 @@ class ImageStyler():
         plt.imshow(output[0].astype(np.uint8))
         plt.figure()
         plt.imshow(scaled_to_original_image)
-        plt.show()
-
-        exit(0)
 
 
-        im = Image.fromarray(output[0].astype(np.uint8))
-        im.show()
+        # im = Image.fromarray(output[0].astype(np.uint8))
+        # im.show()
         return output[0]
 
 
@@ -139,12 +136,13 @@ def scale_to_original(styled_im, image_info):
 
 
 if __name__ == "__main__":
-
-    img = scipy.misc.imread("puppy.jpg")
+    
     # imagestyler = ImageStyler(network_path="pretrained-networks/dora-marr-network")
     imagestyler = ImageStyler(network_path="pretrained-networks/rain-princess-network")
     # imagestyler = ImageStyler(network_path="pretrained-networks/starry-night-network")
 
+
+    img = scipy.misc.imread("puppy.jpg")
     time1 = time.time()
     output = imagestyler.img_transform(img)
     time2 = time.time()
@@ -152,6 +150,13 @@ if __name__ == "__main__":
     print(time2 - time1)
 
 
+    img = scipy.misc.imread("familyportrait.jpg")
+    time1 = time.time()
+    output = imagestyler.img_transform(img)
+    time2 = time.time()
+    print("time elapsed: ")
+    print(time2 - time1)
+    plt.show()
 
 
 
